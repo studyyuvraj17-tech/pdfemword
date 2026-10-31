@@ -420,9 +420,9 @@
             const items = content.items.filter(item => item.str && item.str.trim()).map(item => {
               const height = Math.abs(item.transform && item.transform[3]) || item.height || 11;
               fontSizes.push(height);
-              return { text: item.str, x: item.transform[4], y: item.transform[5], width: item.width || 0, height };
+              return { text: item.str, x: item.transform[4], y: item.transform[5], width: item.width || 0, height, fontName: item.fontName || "", fontFamily: content.styles && content.styles[item.fontName] ? content.styles[item.fontName].fontFamily || "" : "" };
             });
-            pages.push(items);
+            pages.push({ items, width: page.getViewport({ scale: 1 }).width });
             page.cleanup();
             await new Promise(resolve => setTimeout(resolve, 0));
           }
@@ -437,8 +437,9 @@
 
           // Rebuild each visual PDF line using its original position and text-item styling.
           // PDF.js coordinates use a bottom-left origin; convert them to top-left coordinates.
-          pages.forEach((items, pageIndex) => {
-            const page = pdf.getPage ? null : null;
+          pages.forEach((pageData, pageIndex) => {
+            const items = pageData.items;
+            const pageWidth = pageData.width;
             const pageLines = [];
             const sorted = items.slice().sort((a, b) => b.y - a.y || a.x - b.x);
 
@@ -482,7 +483,6 @@
               const verticalGap = previousLine ? Math.max(0, previousLine.y - line.y - previousLine.fontSize) : 0;
               const isHeading = line.fontSize >= baseSize * 1.22 && line.text.length < 150;
               const isLikelyTitle = line.fontSize >= baseSize * 1.55 && line.text.length < 110;
-              const pageWidth = Math.max(...items.map(item => item.x + item.width), 1);
               const leftSpace = Math.max(0, line.left);
               const rightSpace = Math.max(0, pageWidth - line.right);
               let alignment = "left";
