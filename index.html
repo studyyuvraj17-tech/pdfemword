@@ -486,8 +486,13 @@
               const leftSpace = Math.max(0, line.left);
               const rightSpace = Math.max(0, pageWidth - line.right);
               let alignment = "left";
-              if (Math.abs((line.left + line.right) / 2 - pageWidth / 2) < pageWidth * 0.055) alignment = "center";
-              else if (rightSpace < pageWidth * 0.055 && leftSpace > pageWidth * 0.18) alignment = "right";
+              // A justified body-text line often spans almost the full text column,
+              // so its midpoint is near the page centre. Do not mistake that for
+              // centred text: only classify short, genuinely centred lines as centred.
+              const isShortLine = line.width < pageWidth * 0.78;
+              const isCenteredLine = Math.abs((line.left + line.right) / 2 - pageWidth / 2) < pageWidth * 0.045;
+              if (isShortLine && isCenteredLine) alignment = "center";
+              else if (isShortLine && rightSpace < pageWidth * 0.055 && leftSpace > pageWidth * 0.18) alignment = "right";
 
               const runs = [];
               let previous = null;
