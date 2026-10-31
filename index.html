@@ -434,62 +434,111 @@
           const baseSize = median(fontSizes);
           const { Document, Paragraph, TextRun, Packer } = window.docx;
           const paragraphs = [];
+
+          // Rebuild each visual PDF line using its original position and text-item styling.
+          // PDF.js coordinates use a bottom-left origin; convert them to top-left coordinates.
           pages.forEach((items, pageIndex) => {
-            const lines = [];
-            items.sort((a,b) => b.y - a.y);
-            items.forEach(item => {
-              let line = lines[lines.length - 1];
-              if (line && Math.abs(line.y - item.y) <= Math.max(2, item.height * 0.5)) line.items.push(item);
-              else lines.push({ y: item.y, items: [item] });
+            const page = pdf.getPage ? null : null;
+            const pageLines = [];
+            const sorted = items.slice().sort((a, b) => b.y - a.y || a.x - b.x);
+
+            sorted.forEach(item => {
+              const tolerance = Math.max(2, Math.min(item.height, 18) * 0.42);
+              let line = pageLines.find(candidate => Math.abs(candidate.y - item.y) <= tolerance);
+              if (!line) {
+                line = { y: item.y, items: [] };
+                pageLines.push(line);
+              }
+              line.items.push(item);
+              line.y = line.items.reduce((sum, part) => sum + part.y, 0) / line.items.length;
             });
-            lines.forEach(line => {
-              line.items.sort((a,b) => a.x - b.x);
-              let text = "";
+
+            pageLines.sort((a, b) => b.y - a.y);
+            pageLines.forEach(line => {
+              line.items.sort((a, b) => a.x - b.x);
               let previous = null;
-              let maxSize = 0;
+              let text = "";
               line.items.forEach(item => {
-                if (previous && item.x - (previous.x + previous.width) > item.height * 0.18 && !/\s$/.test(text) && !/^\s/.test(item.text)) text += " ";
+                if (previous) {
+                  const gap = item.x - (previous.x + previous.width);
+                  if (gap > Math.max(1.5, item.height * 0.16) && !/\\s$/.test(text) && !/^\\s/.test(item.text)) {
+                    text += " ";
+                  }
+                }
                 text += item.text;
                 previous = item;
-                maxSize = Math.max(maxSize, item.height);
               });
-              line.text = text.trim();
-              line.fontSize = maxSize;
+              line.text = text.replace(/[\\t ]+/g, " ").trim();
+              line.fontSize = median(line.items.map(item => item.height).filter(Boolean));
+              line.left = Math.min(...line.items.map(item => item.x));
+              line.right = Math.max(...line.items.map(item => item.x + item.width));
+              line.width = Math.max(0, line.right - line.left);
             });
-            const nonEmpty = lines.filter(line => line.text);
+
+            const nonEmpty = pageLines.filter(line => line.text);
             nonEmpty.forEach((line, index) => {
-              const isHeading = line.fontSize >= baseSize * 1.3 && line.text.length < 140;
               const previousLine = nonEmpty[index - 1];
-              const paragraphGap = previousLine && previousLine.y - line.y > line.fontSize * 1.65;
-              const isNewParagraph = index === 0 || isHeading || paragraphGap;
-              if (!isNewParagraph && paragraphs.length && paragraphs[paragraphs.length - 1].pageIndex === pageIndex) {
-                const previous = paragraphs[paragraphs.length - 1];
-                previous.text += (/[-\u00ad]$/.test(previous.text) ? "" : " ") + line.text;
-              } else {
-                paragraphs.push({ text: line.text, heading: isHeading, pageIndex });
-              }
+              const nextLine = nonEmpty[index + 1];
+              const verticalGap = previousLine ? Math.max(0, previousLine.y - line.y - previousLine.fontSize) : 0;
+              const isHeading = line.fontSize >= baseSize * 1.22 && line.text.length < 150;
+              const isLikelyTitle = line.fontSize >= baseSize * 1.55 && line.text.length < 110;
+              const pageWidth = Math.max(...items.map(item => item.x + item.width), 1);
+              const leftSpace = Math.max(0, line.left);
+              const rightSpace = Math.max(0, pageWidth - line.right);
+              let alignment = "left";
+              if (Math.abs((line.left + line.right) / 2 - pageWidth / 2) < pageWidth * 0.055) alignment = "center";
+              else if (rightSpace < pageWidth * 0.055 && leftSpace > pageWidth * 0.18) alignment = "right";
+
+              const runs = [];
+              let previous = null;
+              line.items.forEach(item => {
+                if (previous) {
+                  const gap = item.x - (previous.x + previous.width);
+                  if (gap > Math.max(1.5, item.height * 0.16) && !/\\s$/.test(previous.text) && !/^\\s/.test(item.text)) {
+                    runs.push(new TextRun({ text: " " }));
+                  }
+                }
+                const fontName = String(item.fontName || "");
+                const fontInfo = (item.fontFamily || "") + " " + fontName;
+                const isBold = /bold|black|heavy|demi|semibold/i.test(fontInfo);
+                const isItalic = /italic|oblique/i.test(fontInfo);
+                const size = Math.max(16, Math.min(56, Math.round((item.height || baseSize) * 2)));
+                runs.push(new TextRun({
+                  text: item.text,
+                  font: "Arial",
+                  size,
+                  bold: isBold,
+                  italics: isItalic
+                }));
+                previous = item;
+              });
+
+              const nextGap = nextLine ? Math.max(0, line.y - nextLine.y - line.fontSize) : 0;
+              const after = Math.max(20, Math.min(360, Math.round((nextGap > line.fontSize * 0.65 ? nextGap * 12 : 3) * 20)));
+              const indent = Math.max(0, Math.min(3600, Math.round((line.left - 36) * 20)));
+              paragraphs.push(new Paragraph({
+                alignment,
+                indent: { left: indent },
+                pageBreakBefore: index === 0 && pageIndex > 0,
+                spacing: { before: verticalGap > line.fontSize * 0.65 ? Math.min(360, Math.round(verticalGap * 12)) : 0, after, line: 276 },
+                keepNext: isHeading,
+                children: runs.length ? runs : [new TextRun({ text: line.text, font: "Arial", size: 22 })]
+              }));
             });
           });
 
           if (!paragraphs.length) {
-            showError("Não foi possível extrair texto deste PDF.");
+            showError("Não foi possível reconstruir o texto deste PDF.");
             return;
           }
-          statusEl.textContent = "Criando o documento Word…";
-          setProgress(91);
-          const children = paragraphs.map((item, index) => new Paragraph({
-            pageBreakBefore: index > 0 && item.pageIndex !== paragraphs[index - 1].pageIndex,
-            spacing: { after: item.heading ? 180 : 110, line: 276 },
-            children: [new TextRun({
-              text: item.text,
-              bold: item.heading,
-              size: item.heading ? 28 : 22,
-              font: "Arial"
-            })]
-          }));
+          statusEl.textContent = "Montando o Word com a formatação detectada…";
+          setProgress(94);
           const docxDocument = new Document({
             styles: { default: { document: { run: { font: "Arial", size: 22 } } } },
-            sections: [{ properties: { page: { margin: { top: 1134, bottom: 1134, left: 1134, right: 1134 } } }, children }]
+            sections: [{
+              properties: { page: { margin: { top: 1134, bottom: 1134, left: 1134, right: 1134 } } },
+              children: paragraphs
+            }]
           });
           const blob = await Packer.toBlob(docxDocument);
           if (taskId !== conversionId) return;
