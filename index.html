@@ -74,6 +74,49 @@
     @media(max-width:650px){.shell{width:min(100% - 28px,920px)}header{height:70px}.privacy-pill{font-size:11px;padding:6px 9px}main{padding:35px 0 48px}h1{letter-spacing:-1.3px}.lead{font-size:15px}.converter{padding:14px;border-radius:19px}.dropzone{min-height:230px;padding:22px 12px}.benefits{grid-template-columns:1fr;gap:10px}.benefit{display:flex;gap:12px;align-items:flex-start;padding:14px}.benefit-icon{flex:0 0 34px;margin:0}.how{margin-top:48px}.steps{grid-template-columns:1fr;gap:8px}.step{padding:13px 16px}.footer-inner{justify-content:center;text-align:center}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
   </style>
+  <style>
+    /* Mobile-first refinements */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { overflow-x: hidden; }
+    .shell { min-width: 0; }
+    .converter, .benefit, .step { min-width: 0; }
+    .dropzone { touch-action: manipulation; }
+    .browse, .primary, .secondary { min-height: 44px; }
+    .file-line { min-width: 0; }
+    .file-info { overflow-wrap: anywhere; }
+    @media (max-width: 520px) {
+      header { height: auto; min-height: 68px; padding-top: 12px; padding-bottom: 12px; gap: 8px; }
+      .brand { font-size: 16px; gap: 8px; }
+      .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+      .privacy-pill { max-width: 130px; white-space: nowrap; font-size: 10px; }
+      main { padding-top: 28px; }
+      .intro { margin-bottom: 24px; }
+      h1 { font-size: clamp(31px, 9vw, 42px); line-height: 1.12; letter-spacing: -1.2px; }
+      .lead { font-size: 14px; line-height: 1.55; }
+      .converter { padding: 12px; }
+      .dropzone { min-height: 218px; padding: 20px 12px; }
+      .drop-title { font-size: 17px; }
+      .drop-copy { font-size: 13px; }
+      .file-note { font-size: 11px; }
+      .actions { display: grid; grid-template-columns: 1fr; }
+      .actions .primary, .actions .secondary { width: 100%; min-height: 46px; }
+      .file-line { align-items: flex-start; }
+      .file-name { font-size: 13px; }
+      .benefit p { font-size: 12px; }
+      .disclaimer { font-size: 11px; line-height: 1.55; padding: 0 4px; }
+      .how h2 { font-size: 22px; }
+      footer { padding: 18px 0; }
+    }
+    @media (max-width: 360px) {
+      .shell { width: calc(100% - 22px); }
+      .privacy-pill { max-width: 112px; padding: 6px 7px; font-size: 9px; }
+      .brand { font-size: 15px; }
+      .brand-mark { width: 31px; height: 31px; }
+      h1 { font-size: 30px; }
+      .dropzone { min-height: 205px; }
+    }
+  </style>
+
 </head>
 <body>
   <header class="shell">
