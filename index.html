@@ -182,6 +182,7 @@
         downloadUrl = null;
       }
       function reset() {
+        conversionId += 1;
         if (currentTask && currentTask.destroy) currentTask.destroy();
         currentTask = null;
         clearDownload();
@@ -212,6 +213,7 @@
         statusEl.className = "status";
         statusEl.textContent = "Preparando arquivo…";
         actions.replaceChildren();
+        addButton("Cancelar conversão", reset);
         setProgress(2);
       }
       function validate(file) {
@@ -235,6 +237,7 @@
       }
 
       async function convert(file) {
+        const taskId = ++conversionId;
         showPanel(file);
         if (!validate(file)) return;
         if (!window.pdfjsLib || !window.docx) {
@@ -245,8 +248,10 @@
         try {
           statusEl.textContent = "Lendo o PDF…";
           const data = new Uint8Array(await file.arrayBuffer());
+          if (taskId !== conversionId) return;
           currentTask = pdfjsLib.getDocument({ data });
           const pdf = await currentTask.promise;
+          if (taskId !== conversionId) return;
           const pages = [];
           const fontSizes = [];
 
@@ -255,6 +260,7 @@
             setProgress(5 + (pageNumber / pdf.numPages) * 78);
             const page = await pdf.getPage(pageNumber);
             const content = await page.getTextContent();
+            if (taskId !== conversionId) return;
             const items = content.items.filter(item => item.str && item.str.trim()).map(item => {
               const height = Math.abs(item.transform && item.transform[3]) || item.height || 11;
               fontSizes.push(height);
@@ -330,6 +336,7 @@
             sections: [{ properties: { page: { margin: { top: 1134, bottom: 1134, left: 1134, right: 1134 } } }, children }]
           });
           const blob = await Packer.toBlob(docxDocument);
+          if (taskId !== conversionId) return;
           clearDownload();
           downloadUrl = URL.createObjectURL(blob);
           const link = document.createElement("a");
@@ -343,6 +350,7 @@
           statusEl.className = "status";
           statusEl.textContent = "Concluído! Seu documento Word está pronto para baixar.";
         } catch (error) {
+          if (taskId !== conversionId) return;
           console.error("PDF conversion error:", error);
           if (error && error.name === "PasswordException") showError("Este PDF está protegido por senha. Remova a proteção e tente novamente.");
           else if (error && error.name === "InvalidPDFException") showError("Este PDF parece estar danificado ou não é válido.");
