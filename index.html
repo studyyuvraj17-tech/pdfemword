@@ -325,11 +325,11 @@
               font: "Arial"
             })]
           }));
-          const document = new Document({
+          const docxDocument = new Document({
             styles: { default: { document: { run: { font: "Arial", size: 22 } } } },
             sections: [{ properties: { page: { margin: { top: 1134, bottom: 1134, left: 1134, right: 1134 } } }, children }]
           });
-          const blob = await Packer.toBlob(document);
+          const blob = await Packer.toBlob(docxDocument);
           clearDownload();
           downloadUrl = URL.createObjectURL(blob);
           const link = document.createElement("a");
