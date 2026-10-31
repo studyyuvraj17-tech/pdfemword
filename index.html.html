@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PDF em Word — converta PDF para Word grátis e online</title>
+<meta name="description" content="Converta PDF em Word (.docx) direto no navegador. Grátis, rápido e privado: seu arquivo nunca sai do seu dispositivo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--fg:#18181b;--mute:#71717a;--line:#e4e4e0;--card:#fff;--acc:#1d4ed8;--accfg:#fff;--err:#b91c1c;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101012;--fg:#f4f4f5;--mute:#a1a1aa;--line:#2a2a2e;--card:#17171a;--acc:#6b95ff;--accfg:#0b0b0d;--err:#f87171}}
+:root[data-theme="dark"]{--bg:#101012;--fg:#f4f4f5;--mute:#a1a1aa;--line:#2a2a2e;--card:#17171a;--acc:#6b95ff;--accfg:#0b0b0d;--err:#f87171}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;min-height:100vh;display:flex;flex-direction:column}
+.wrap{width:100%;max-width:640px;margin:0 auto;padding:0 24px}
+header{padding:28px 0}
+.logo{font-weight:600;letter-spacing:-.01em;font-size:17px}
+.logo span{color:var(--acc)}
+main{flex:1}
+h1{font-size:clamp(30px,6vw,44px);line-height:1.1;letter-spacing:-.03em;font-weight:600;margin:48px 0 14px}
+.sub{color:var(--mute);font-size:17px;margin:0 0 36px;max-width:480px}
+.drop{display:block;border:1.5px dashed var(--line);background:var(--card);border-radius:16px;padding:52px 24px;text-align:center;cursor:pointer;transition:border-color .15s,transform .15s}
+.drop:hover,.drop.on{border-color:var(--acc)}
+.drop.on{transform:scale(1.01)}
+.drop b{display:block;font-weight:500;font-size:17px;margin-bottom:4px}
+.drop small{color:var(--mute);font-size:14px}
+input[type=file]{display:none}
+.btn{display:inline-block;background:var(--acc);color:var(--accfg);border:0;border-radius:10px;padding:12px 22px;font:500 15px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.btn:hover{opacity:.9}
+.ghost{background:none;color:var(--mute);padding:12px 8px}
+.panel{display:none;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:28px;text-align:center}
+.panel.show{display:block}
+.name{font-weight:500;word-break:break-all}
+.msg{color:var(--mute);font-size:14px;margin:6px 0 18px}
+.bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin:18px 0 4px}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.err{color:var(--err)}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:28px;margin:64px 0 40px;padding-top:32px;border-top:1px solid var(--line)}
+.facts h2{font-size:15px;font-weight:600;margin:0 0 4px}
+.facts p{margin:0;color:var(--mute);font-size:14px}
+.note{color:var(--mute);font-size:13px;margin:0 0 40px}
+footer{padding:24px 0 32px;color:var(--mute);font-size:13px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="logo">PDF em <span>Word</span></div></header>
+<main>
+<h1>Transforme PDF em Word.</h1>
+<p class="sub">Simples, gratuito e privado. A conversão acontece no seu navegador, sem enviar nada para a internet.</p>
+
+<label class="drop" id="drop" for="file">
+<b>Escolha um PDF ou arraste até aqui</b>
+<small>Gera um arquivo .docx editável</small>
+</label>
+<input type="file" id="file" accept="application/pdf,.pdf">
+
+<div class="panel" id="panel">
+<div class="name" id="fname"></div>
+<div class="bar"><i id="fill"></i></div>
+<div class="msg" id="status"></div>
+<div class="row" id="actions"></div>
+</div>
+
+<div class="facts">
+<div><h2>Privado</h2><p>Seu arquivo não sai do seu dispositivo. Nada é enviado ou guardado.</p></div>
+<div><h2>Rápido</h2><p>Sem cadastro, sem fila, sem marca d’água. Escolha o arquivo e baixe.</p></div>
+<div><h2>Editável</h2><p>O texto vira parágrafos e títulos que você pode editar no Word.</p></div>
+</div>
+<p class="note">Funciona melhor com PDFs de texto. Imagens, tabelas e layouts complexos não são mantidos, e PDFs escaneados (apenas imagem) não são suportados.</p>
+</main>
+<footer>© <span id="y"></span> pdfemword.online</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+$("y").textContent=new Date().getFullYear();
+var drop=$("drop"),input=$("file"),panel=$("panel"),fname=$("fname"),fill=$("fill"),status=$("status"),actions=$("actions");
+var lastUrl=null;
+
+["dragenter","dragover"].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.add("on")})});
+["dragleave","drop"].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.remove("on")})});
+drop.addEventListener("drop",function(ev){var f=ev.dataTransfer&&ev.dataTransfer.files[0];if(f)start(f)});
+input.addEventListener("change",function(){if(input.files[0])start(input.files[0]);input.value=""});
+
+function reset(){
+  panel.classList.remove("show");drop.style.display="block";
+  if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null}
+}
+function fail(text){
+  fill.style.width="0";status.className="msg err";status.textContent=text;
+  actions.innerHTML="";addAgain();
+}
+function addAgain(label){
+  var b=document.createElement("button");b.className="btn ghost";b.textContent=label||"Tentar outro arquivo";
+  b.onclick=reset;actions.appendChild(b);
+}
+function median(a){var s=a.slice().sort(function(x,y){return x-y});return s[Math.floor(s.length/2)]||11}
+
+async function start(file){
+  if(!/pdf$/i.test(file.name)&&file.type!=="application/pdf"){return alert("Escolha um arquivo PDF.")}
+  drop.style.display="none";panel.classList.add("show");
+  fname.textContent=file.name;fill.style.width="2%";status.className="msg";status.textContent="Lendo o arquivo…";actions.innerHTML="";
+  if(!window.pdfjsLib||!window.docx){return fail("Não foi possível carregar o conversor. Verifique a conexão e recarregue a página.")}
+  try{
+    var buf=await file.arrayBuffer();
+    var pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    var pages=[],sizes=[];
+    for(var p=1;p<=pdf.numPages;p++){
+      status.textContent="Convertendo página "+p+" de "+pdf.numPages+"…";
+      fill.style.width=Math.max(4,Math.round(p/pdf.numPages*90))+"%";
+      var page=await pdf.getPage(p);
+      var tc=await page.getTextContent();
+      var items=tc.items.filter(function(i){return i.str&&i.str.trim()}).map(function(i){
+        var h=Math.abs(i.transform[3])||i.height||11;
+        return {s:i.str,x:i.transform[4],y:i.transform[5],w:i.width||0,h:h};
+      });
+      items.forEach(function(i){sizes.push(i.h)});
+      pages.push(items);
+      await new Promise(function(r){setTimeout(r,0)});
+    }
+    var total=sizes.length;
+    if(!total){return fail("Não encontramos texto neste PDF. Ele pode ser escaneado (apenas imagem).")}
+    var base=median(sizes);
+    var D=window.docx,children=[];
+    pages.forEach(function(items,pi){
+      var lines=[];
+      items.sort(function(a,b){return b.y-a.y});
+      items.forEach(function(it){
+        var l=lines[lines.length-1];
+        if(l&&Math.abs(l.y-it.y)<=Math.max(2,it.h*.5)){l.items.push(it)}
+        else lines.push({y:it.y,items:[it]});
+      });
+      var minL=Infinity,maxR=0;
+      lines.forEach(function(l){
+        l.items.sort(function(a,b){return a.x-b.x});
+        var t="",prev=null,sz=0;
+        l.items.forEach(function(it){
+          if(prev&&it.x-(prev.x+prev.w)>it.h*.15&&!/\s$/.test(t)&&!/^\s/.test(it.s))t+=" ";
+          t+=it.s;prev=it;sz=Math.max(sz,it.h);
+        });
+        var f=l.items[0],last=l.items[l.items.length-1];
+        l.text=t.trim();l.size=sz;l.left=f.x;l.right=last.x+last.w;
+        minL=Math.min(minL,l.left);maxR=Math.max(maxR,l.right);
+      });
+      var span=maxR-minL,paras=[];
+      lines.forEach(function(l,i){
+        var prev=paras[paras.length-1],pl=lines[i-1];
+        var heading=l.size>=base*1.25;
+        var brk=!prev||heading||prev.heading||(pl.y-l.y)>l.size*1.7||pl.right<minL+span*.75||l.left>minL+base*1.5;
+        if(brk)paras.push({text:l.text,size:l.size,heading:heading,first:!prev});
+        else prev.text+=(/-$/.test(prev.text)?"":" ")+l.text;
+      });
+      paras.forEach(function(q,qi){
+        var sz=q.heading?Math.min(44,Math.round(22*q.size/base)):22;
+        children.push(new D.Paragraph({
+          pageBreakBefore:pi>0&&qi===0,
+          spacing:{after:q.heading?160:120,line:276},
+          children:[new D.TextRun({text:q.text,bold:q.heading,size:sz})]
+        }));
+      });
+    });
+    if(!children.length)children.push(new D.Paragraph(""));
+    status.textContent="Gerando o arquivo Word…";fill.style.width="96%";
+    var doc=new D.Document({
+      styles:{default:{document:{run:{font:"Calibri",size:22}}}},
+      sections:[{properties:{page:{margin:{top:1134,bottom:1134,left:1134,right:1134}}},children:children}]
+    });
+    var blob=await D.Packer.toBlob(doc);
+    if(lastUrl)URL.revokeObjectURL(lastUrl);
+    lastUrl=URL.createObjectURL(blob);
+    fill.style.width="100%";status.className="msg";status.textContent="Pronto! Seu arquivo Word está disponível.";
+    var a=document.createElement("a");a.className="btn";a.textContent="Baixar Word (.docx)";
+    a.href=lastUrl;a.download=file.name.replace(/\.pdf$/i,"")+".docx";
+    actions.innerHTML="";actions.appendChild(a);addAgain("Converter outro");
+  }catch(e){
+    if(e&&e.name==="PasswordException")fail("Este PDF está protegido por senha. Remova a senha e tente novamente.");
+    else fail("Não foi possível converter este arquivo. Ele pode estar danificado ou protegido.");
+  }
+}
+})();
+</script>
+</body>
+</html>
