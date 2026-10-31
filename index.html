@@ -347,7 +347,9 @@
           if (error && error.name === "PasswordException") showError("Este PDF está protegido por senha. Remova a proteção e tente novamente.");
           else if (error && error.name === "InvalidPDFException") showError("Este PDF parece estar danificado ou não é válido.");
           else showError("Não foi possível converter este arquivo. Tente outro PDF ou um arquivo menor.");
-        } finally {\n          if (taskId === conversionId) currentTask = null;\n        }
+        } finally {
+          if (taskId === conversionId) currentTask = null;
+        }
       }
 
       input.addEventListener("change", () => {
