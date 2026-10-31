@@ -477,57 +477,69 @@
             });
 
             const nonEmpty = pageLines.filter(line => line.text);
+            // Rejoin consecutive visual lines into editable Word paragraphs.
+            // A larger vertical gap, a heading, or a changed left edge starts a new paragraph.
+            const paragraphGroups = [];
+            const pageTextLeft = Math.min(...nonEmpty.map(line => line.left));
             nonEmpty.forEach((line, index) => {
               const previousLine = nonEmpty[index - 1];
-              const nextLine = nonEmpty[index + 1];
               const verticalGap = previousLine ? Math.max(0, previousLine.y - line.y - previousLine.fontSize) : 0;
               const isHeading = line.fontSize >= baseSize * 1.22 && line.text.length < 150;
-              const isLikelyTitle = line.fontSize >= baseSize * 1.55 && line.text.length < 110;
-              const leftSpace = Math.max(0, line.left);
-              const rightSpace = Math.max(0, pageWidth - line.right);
-              let alignment = "left";
-              // A justified body-text line often spans almost the full text column,
-              // so its midpoint is near the page centre. Do not mistake that for
-              // centred text: only classify short, genuinely centred lines as centred.
-              const isShortLine = line.width < pageWidth * 0.78;
-              const isCenteredLine = Math.abs((line.left + line.right) / 2 - pageWidth / 2) < pageWidth * 0.045;
-              if (isShortLine && isCenteredLine) alignment = "center";
-              else if (isShortLine && rightSpace < pageWidth * 0.055 && leftSpace > pageWidth * 0.18) alignment = "right";
+              const startsNew = !paragraphGroups.length || isHeading ||
+                (previousLine && (verticalGap > line.fontSize * 0.9 ||
+                  Math.abs(line.left - previousLine.left) > Math.max(14, line.fontSize * 1.4)));
+              if (startsNew) paragraphGroups.push({ lines: [], isHeading });
+              paragraphGroups[paragraphGroups.length - 1].lines.push(line);
+            });
 
+            paragraphGroups.forEach((group, index) => {
+              const firstLine = group.lines[0];
+              const lastLine = group.lines[group.lines.length - 1];
+              const isHeading = group.isHeading;
+              const isLikelyTitle = firstLine.fontSize >= baseSize * 1.55 && firstLine.text.length < 110;
+              const shortCenteredLine = firstLine.width < pageWidth * 0.55 &&
+                Math.abs((firstLine.left + firstLine.right) / 2 - pageWidth / 2) < pageWidth * 0.06;
+              const alignment = shortCenteredLine ? "center" : "left";
               const runs = [];
-              let previous = null;
-              line.items.forEach(item => {
-                if (previous) {
-                  const gap = item.x - (previous.x + previous.width);
-                  if (gap > Math.max(1.5, item.height * 0.16) && !/\s$/.test(previous.text) && !/^\s/.test(item.text)) {
-                    runs.push(new TextRun({ text: " " }));
+
+              group.lines.forEach((line, lineIndex) => {
+                if (lineIndex > 0) runs.push(new TextRun({ text: " " }));
+                let previous = null;
+                line.items.forEach(item => {
+                  if (previous) {
+                    const gap = item.x - (previous.x + previous.width);
+                    if (gap > Math.max(1.5, item.height * 0.16) && !/\\s$/.test(previous.text) && !/^\\s/.test(item.text)) {
+                      runs.push(new TextRun({ text: " " }));
+                    }
                   }
-                }
-                const fontName = String(item.fontName || "");
-                const fontInfo = (item.fontFamily || "") + " " + fontName;
-                const isBold = /bold|black|heavy|demi|semibold/i.test(fontInfo);
-                const isItalic = /italic|oblique/i.test(fontInfo);
-                const size = Math.max(16, Math.min(56, Math.round((item.height || baseSize) * 2)));
-                runs.push(new TextRun({
-                  text: item.text,
-                  font: "Arial",
-                  size,
-                  bold: isBold || isHeading,
-                  italics: isItalic
-                }));
-                previous = item;
+                  const fontInfo = String(item.fontFamily || "") + " " + String(item.fontName || "");
+                  const isBold = /bold|black|heavy|demi|semibold/i.test(fontInfo);
+                  const isItalic = /italic|oblique/i.test(fontInfo);
+                  const family = /times|cambria|georgia|serif/i.test(fontInfo) ? "Times New Roman" :
+                    (/courier|mono/i.test(fontInfo) ? "Courier New" : "Arial");
+                  const size = Math.max(14, Math.min(56, Math.round((item.height || baseSize) * 2)));
+                  runs.push(new TextRun({
+                    text: item.text,
+                    font: family,
+                    size,
+                    bold: isBold || isHeading,
+                    italics: isItalic
+                  }));
+                  previous = item;
+                });
               });
 
-              const nextGap = nextLine ? Math.max(0, line.y - nextLine.y - line.fontSize) : 0;
-              const after = Math.max(20, Math.min(360, Math.round((nextGap > line.fontSize * 0.65 ? nextGap * 12 : 3) * 20)));
-              const indent = Math.max(0, Math.min(3600, Math.round((line.left - 36) * 20)));
+              const nextGroup = paragraphGroups[index + 1];
+              const gapAfter = nextGroup ? Math.max(0, lastLine.y - nextGroup.lines[0].y - lastLine.fontSize) : 0;
+              const after = Math.max(40, Math.min(300, Math.round((gapAfter > lastLine.fontSize * 0.75 ? gapAfter * 10 : 4) * 20)));
+              const indent = Math.max(0, Math.min(2400, Math.round((firstLine.left - pageTextLeft) * 20)));
               paragraphs.push(new Paragraph({
                 alignment,
                 indent: { left: indent },
                 pageBreakBefore: index === 0 && pageIndex > 0,
-                spacing: { before: verticalGap > line.fontSize * 0.65 ? Math.min(360, Math.round(verticalGap * 12)) : 0, after, line: 276 },
-                keepNext: isHeading,
-                children: runs.length ? runs : [new TextRun({ text: line.text, font: "Arial", size: 22 })]
+                spacing: { before: 0, after, line: 276 },
+                keepNext: isHeading || isLikelyTitle,
+                children: runs.length ? runs : [new TextRun({ text: group.lines.map(line => line.text).join(" "), font: "Times New Roman", size: 22 })]
               }));
             });
           });
