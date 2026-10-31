@@ -71,6 +71,7 @@
     .step h3{font:700 15px Manrope,sans-serif;margin:6px 0}
     .step p{font-size:13px;color:var(--muted);margin:0}
     footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-size:12px}
+    .footer-links a{color:var(--muted);text-decoration:none}.footer-links a:hover{color:var(--blue);text-decoration:underline}
     .footer-inner{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
     button:focus-visible,a:focus-visible,.dropzone:focus-visible{outline:3px solid #91a7ff;outline-offset:3px}
     @media(max-width:650px){.shell{width:min(100% - 28px,920px)}header{height:70px}.privacy-pill{font-size:11px;padding:6px 9px}main{padding:35px 0 48px}h1{letter-spacing:-1.3px}.lead{font-size:15px}.converter{padding:14px;border-radius:19px}.dropzone{min-height:230px;padding:22px 12px}.benefits{grid-template-columns:1fr;gap:10px}.benefit{display:flex;gap:12px;align-items:flex-start;padding:14px}.benefit-icon{flex:0 0 34px;margin:0}.how{margin-top:48px}.steps{grid-template-columns:1fr;gap:8px}.step{padding:13px 16px}.footer-inner{justify-content:center;text-align:center}}
@@ -191,7 +192,7 @@
     </section>
   </main>
 
-  <footer><div class="shell footer-inner"><span>© <span id="year"></span> PDF em Word</span><span>Ferramenta gratuita · Seus documentos permanecem no seu dispositivo</span></div></footer>
+  <footer><div class="shell footer-inner"><span>© <span id="year"></span> PDFemWord</span><nav class="footer-links" aria-label="Information"><a href="/about.html">About Us</a> · <a href="/contact.html">Contact Us</a> · <a href="/privacy-policy.html">Privacy Policy</a> · <a href="/terms.html">Terms of Service</a> · <a href="/disclaimer.html">Disclaimer</a></nav></div></footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js" defer></script>
