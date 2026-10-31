@@ -462,14 +462,14 @@
               line.items.forEach(item => {
                 if (previous) {
                   const gap = item.x - (previous.x + previous.width);
-                  if (gap > Math.max(1.5, item.height * 0.16) && !/\\s$/.test(text) && !/^\\s/.test(item.text)) {
+                  if (gap > Math.max(1.5, item.height * 0.16) && !/\s$/.test(text) && !/^\s/.test(item.text)) {
                     text += " ";
                   }
                 }
                 text += item.text;
                 previous = item;
               });
-              line.text = text.replace(/[\\t ]+/g, " ").trim();
+              line.text = text.replace(/[\t ]+/g, " ").trim();
               line.fontSize = median(line.items.map(item => item.height).filter(Boolean));
               line.left = Math.min(...line.items.map(item => item.x));
               line.right = Math.max(...line.items.map(item => item.x + item.width));
@@ -494,7 +494,7 @@
               line.items.forEach(item => {
                 if (previous) {
                   const gap = item.x - (previous.x + previous.width);
-                  if (gap > Math.max(1.5, item.height * 0.16) && !/\\s$/.test(previous.text) && !/^\\s/.test(item.text)) {
+                  if (gap > Math.max(1.5, item.height * 0.16) && !/\s$/.test(previous.text) && !/^\s/.test(item.text)) {
                     runs.push(new TextRun({ text: " " }));
                   }
                 }
