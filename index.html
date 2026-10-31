@@ -175,7 +175,7 @@
     </section>
 
     <section class="converter" aria-label="Conversor de PDF para Word">
-      <label class="dropzone" id="dropzone" for="pdf-file" tabindex="0" role="button" aria-describedby="file-help">
+      <label class="dropzone" id="dropzone" for="pdf-file" aria-describedby="file-help">
         <span class="upload-icon" aria-hidden="true">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
@@ -184,7 +184,7 @@
         <span class="browse">Escolher PDF</span>
         <p class="file-note" id="file-help">PDF · Até 50 MB · Não é necessário cadastro</p>
       </label>
-      <input id="pdf-file" type="file" accept=".pdf,application/pdf" aria-label="Selecionar arquivo PDF">
+      <input id="pdf-file" type="file" accept=".pdf,application/pdf" aria-describedby="file-help">
 
       <div class="progress-card" id="progress-card" aria-live="polite">
         <div class="file-line">
@@ -520,12 +520,6 @@
       dropzone.addEventListener("drop", event => {
         const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
         if (file) convert(file);
-      });
-      dropzone.addEventListener("keydown", event => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          input.click();
-        }
       });
       window.addEventListener("beforeunload", clearDownload);
     })();
